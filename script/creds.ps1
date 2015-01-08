@@ -21,6 +21,6 @@ $ScriptBlockContent = {
 
 Invoke-Command -Session $abdul -ScriptBlock $ScriptBlockContent -ArgumentList "DNS1", "DNS2"
 
-$job = Test-connection -Count 1 -ComputerName (Get-Content ..\etc\slaves) 
+$job = Test-connection -Count 1 -ComputerName (Get-Content ..\etc\slaves) -asJob
 
 if ($job.JobStateInfo.State -ne "Running") { $results = Receive-Job $job }
