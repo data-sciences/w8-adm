@@ -49,7 +49,7 @@ Description = 'Site utilities for configuring Windows 8.1 laptops - not members 
 # ProcessorArchitecture = ''
 
 # Modules that must be imported into the global environment prior to importing this module
-# RequiredModules = @()
+RequiredModules = @( "Indented.NetworkTools" )
 
 # Assemblies that must be loaded prior to importing this module
 # RequiredAssemblies = @()
@@ -90,8 +90,9 @@ AliasesToExport = '*'
 # HelpInfo URI of this module
 # HelpInfoURI = ''
 
-# Default prefix for commands exported from this module. Override the default prefix using Import-Module -Prefix.
-# DefaultCommandPrefix = ''
+# Default prefix for commands exported from this module. 
+# Override the default prefix using Import-Module -Prefix.
+DefaultCommandPrefix = 'ds0_'
 
 }
 
