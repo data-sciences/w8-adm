@@ -55,9 +55,57 @@ function Get-Settings {
 	$OutputObj | Add-Member -MemberType NoteProperty -Name Network -Value (Get-Network)
         $OutputObj
     }
+
+    End {
+     $Settings0 = $OutputObj
+    }
+}
+
+function Get-Slave
+{
+    Param
+    (
+        [parameter(Mandatory=$false,
+		   ValueFromPipeline=$true)]
+        [String[]]
+        $ComputerName = $env:ComputerName
+    )
+
+    Process {
+	$s = $null
+	if ($ComputerName -eq $env:ComputerName) {
+	    $s = New-PSSession -ComputerName $ComputerName
+	} else {
+	    $s = New-PSSession -Authentication "Negotiate" -ComputerName $ComputerName -Credential $script:mycreds
+	}
+	$s
+    }
 }
 
 function Set-Slaves
+{
+    Param
+    (
+        [parameter(Mandatory=$false,
+		   ValueFromPipeline=$true)]
+        [String[]]
+        $ComputerName = (Get-Content $PSScriptRoot\etc\slaves)
+    )
+
+    Process
+    {
+	if ($ComputerName -eq $env:ComputerName) {
+	    $slaves0 = @(New-PSSession)
+	    $Settings0 | Add-Member -Force -MemberType NoteProperty -Name pss -Value $slaves0
+	    $slaves0 = @(New-CimSession)
+	    $Settings0 | Add-Member -Force -MemberType NoteProperty -Name cims -Value $slaves0
+	} else {
+	    (Set-Slaves0)
+	}
+    }
+}
+
+function Set-Slaves0
 {
     Param
     (
@@ -77,8 +125,7 @@ function Set-Slaves
     {
 	$slaves = @()
 
-	$slaves0 = (Test-connection -Count 1 -Quiet -ComputerName $ComputerName)
-
+	$slaves0 = (Test-connection -Count 1 -ComputerName $ComputerName)
 	foreach ($h0 in ($slaves0)) {
 	    if ($h0.IPV4Address.IPAddressToString -like $lnetwork) {
 		$slaves += $h0.Address
@@ -89,30 +136,21 @@ function Set-Slaves
 
     End
     {
-	$slaves0 = @()
-	foreach ($slave in $slaves) {
-	    try {
-		$err = $null
-		$s = New-PSSession -Authentication "Negotiate" -ComputerName $slave -Credential $script:mycreds -ErrorAction SilentlyContinue -ErrorVariable err
-		if ($err) { 
-		    continue
-		}
-		
-		$o = New-Object -Type PSObject -Property @{ 
-		    name = $slave
-	            creds = $s
-		}
-		$slaves0 += $o
-	    } catch {
-		write-host "Exception Type: $($_.Exception.GetType().FullName)" -ForegroundColor Red
-		write-host "Exception Message: $($_.Exception.Message)" -ForegroundColor Red
-	    }
-	}
-	
-    	$Settings0 | Add-Member -MemberType NoteProperty -Name Slaves -Value $slaves0
+	$slaves0 = New-PSSession -Authentication "Negotiate" -ComputerName $slaves -Credential $script:mycreds -ErrorAction SilentlyContinue -ErrorVariable err
+
+	$Settings0 | Add-Member -Force -MemberType NoteProperty -Name pss -Value $slaves0
+
+	$slaves0 = New-CimSession -Authentication "Negotiate" -ComputerName $slaves -Credential $script:mycreds -ErrorAction SilentlyContinue -ErrorVariable err
+
+	$Settings0 | Add-Member -Force -MemberType NoteProperty -Name cims -Value $slaves0
     }
 
 }
 
+function Set-HostsFile
+{
 
-Export-ModuleMember Set-Slaves, Get-Network, Get-Settings
+}
+
+
+Export-ModuleMember Set-Slaves, Get-Network, Get-Settings, Get-Slave
