@@ -29,9 +29,9 @@ function Get-Network
 		$address = Get-NetIPAddress -InterfaceAlias $iface.InterfaceAlias
 	    }
 	}
-        $n0 = $address.IPAddress
-        $n1 = (Get-IPDetails -ComputerName $n0) | Where-Object { $_.IPAddress -eq $n0 }
-        $n1.Network
+	$n0 = ($address | ? { $_.AddressFamily -eq "IPv4" }).IPAddress
+	$n1 = (Get-IPDetails -ComputerName $n0) | Where-Object { $_.IPAddress -eq $n0 }
+	$n1.Network
     }               
 }
 
@@ -77,7 +77,7 @@ function Set-Slaves
     {
 	$slaves = @()
 
-	$slaves0 = (Test-connection -Count 1 -ComputerName $ComputerName)
+	$slaves0 = (Test-connection -Count 1 -Quiet -ComputerName $ComputerName)
 
 	foreach ($h0 in ($slaves0)) {
 	    if ($h0.IPV4Address.IPAddressToString -like $lnetwork) {
@@ -89,7 +89,27 @@ function Set-Slaves
 
     End
     {
-    	$Settings0 | Add-Member -MemberType NoteProperty -Name Slaves -Value $slaves
+	$slaves0 = @()
+	foreach ($slave in $slaves) {
+	    try {
+		$err = $null
+		$s = New-PSSession -Authentication "Negotiate" -ComputerName $slave -Credential $script:mycreds -ErrorAction SilentlyContinue -ErrorVariable err
+		if ($err) { 
+		    continue
+		}
+		
+		$o = New-Object -Type PSObject -Property @{ 
+		    name = $slave
+	            creds = $s
+		}
+		$slaves0 += $o
+	    } catch {
+		write-host "Exception Type: $($_.Exception.GetType().FullName)" -ForegroundColor Red
+		write-host "Exception Message: $($_.Exception.Message)" -ForegroundColor Red
+	    }
+	}
+	
+    	$Settings0 | Add-Member -MemberType NoteProperty -Name Slaves -Value $slaves0
     }
 
 }

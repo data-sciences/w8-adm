@@ -25,9 +25,19 @@ param()
 
 $script:Logman="$env:windir\system32\logman.exe"
 
-gci $psscriptroot\*.ps1 | % { . $_.FullName }
+# Source all the .ps1 files (and not the invisible ones maintained by the editor.)
+
+gci $psscriptroot\*.ps1 |
+  ? { $_.BaseName -notlike '.*' } | 
+  ? { $_.Extension -eq '.ps1' } | 
+  % { . $_.FullName }
+
+# Initialize a singleton.
 
 $Settings0 = (Get-Settings)
+
+$script:secpasswd = ConvertTo-SecureString '3Ip$7tsA' -AsPlainText -Force
+$script:mycreds = New-Object System.Management.Automation.PSCredential ("owner", $secpasswd)
 
 Export-ModuleMember Get-Letter
 Export-ModuleMember -Variable Settings0
