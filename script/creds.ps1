@@ -81,3 +81,34 @@ foreach ($iface in (Get-NetConnectionProfile)) {
         Write-Host $iface.InterfaceAlias
         Set-NetConnectionProfile -InterfaceAlias $iface.InterfaceAlias -NetworkCategory Private
     }
+
+
+# trying to change the lid setting
+
+$Name = @{
+    Namespace = 'root\cimv2\power'
+}
+$Id = (Get-WmiObject @Name Win32_PowerPlan -Filter "ElementName LIKE 'High%'") -replace '.*(\{.*})"', '$1'
+$Lid = '{5ca83367-6e45-459f-a27b-476b1d01c936}'
+Get-WmiObject @Name Win32_PowerSettingDataIndex -Filter "InstanceId LIKE '%$Id\\AC\\$Lid'" | 
+    Set-WmiInstance -Arguments @{ SettingIndexValue = 2 }
+
+(Get-WmiObject @Name Win32_PowerPlan -Filter "ElementName LIKE 'High%'")
+
+$class = ([wmi] '\root\cimv2\power:Win32_PowerSettingDataIndex.InstanceID="Microsoft:PowerSettingDataIndex\\{8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c}\\DC\\{5ca83367-6e45-459f-a27b-476b1d01c936}"')
+$class.SettingIndexValue = 0
+$class.Put()
+
+$DO_NOTHING = 2
+
+$activePowerPlan = Get-WmiObject -Namespace "root\cimv2\power" Win32_PowerPlan -Filter "ElementName LIKE 'High%'"
+$rawPowerPlanID = $activePowerPlan | select -Property InstanceID
+$rawPowerPlanID -match '\\({.*})}'
+$powerPlanID = $matches[1]
+
+# The .GetRelated() method is an inefficient approach, i'm looking for a needle and this haystack is too big. Can i go directly to the object instead of searching?
+$lidCloseActionOnACPower = $activePowerPlan.GetRelated("win32_powersettingdataindex") | where {$_.InstanceID -eq "Microsoft:PowerSettingDataIndex\$powerPlanID\AC\{5ca83367-6e45-459f-a27b-476b1d01c936}"}
+
+$lidCloseActionOnACPower | select -Property SettingIndexValue
+$lidCloseActionOnACPower.SettingIndexValue = $DO_NOTHING
+$lidCloseActionOnACPower.put()
