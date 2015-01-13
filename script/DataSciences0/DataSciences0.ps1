@@ -136,11 +136,11 @@ function Set-Slaves0
 
     End
     {
-	$slaves0 = New-PSSession -Authentication "Negotiate" -ComputerName $slaves -Credential $script:mycreds -ErrorAction SilentlyContinue -ErrorVariable err
+	$slaves0 = New-PSSession -Authentication "Negotiate" -ComputerName $slaves -Credential $mycreds -ErrorAction SilentlyContinue -ErrorVariable err
 
 	$Settings0 | Add-Member -Force -MemberType NoteProperty -Name pss -Value $slaves0
 
-	$slaves0 = New-CimSession -Authentication "Negotiate" -ComputerName $slaves -Credential $script:mycreds -ErrorAction SilentlyContinue -ErrorVariable err
+	$slaves0 = New-CimSession -Authentication "Negotiate" -ComputerName $slaves -Credential $mycreds -ErrorAction SilentlyContinue -ErrorVariable err
 
 	$Settings0 | Add-Member -Force -MemberType NoteProperty -Name cims -Value $slaves0
     }

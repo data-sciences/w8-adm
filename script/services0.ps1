@@ -41,14 +41,14 @@ foreach ($iface in (Get-NetConnectionProfile)) {
 
 # Stop these services.
 
-stop-Service WSearch
-Set-Service WSearch -StartupType Disabled
-
-Get-Service |  Where-Object {$_.name -eq "WSearch"}
-
-stop-Service WMPNetworkSvc
+stop-Service -Force WMPNetworkSvc
 Set-Service WMPNetworkSvc -StartupType Disabled
 
 Get-Service |  Where-Object {$_.name -eq "WMPNetworkSvc"}
+
+stop-Service -Force WSearch
+Set-Service WSearch -StartupType Disabled
+
+Get-Service |  Where-Object {$_.name -eq "WSearch"}
 
 Enable-PSRemoting -Force -SkipNetworkProfileCheck

@@ -10,14 +10,23 @@ Copy over DNSes.
 #>
 
 Get-ds0_Settings
-Set-ds0_Slaves -ComputerName $env:ComputerName
+Set-ds0_Slaves -ComputerName (Get-Content ..\etc\slaves)
+# Set-ds0_Slaves -ComputerName $env:ComputerName
 
-$Settings0
+$Settings.cims
 
 Disable-NetAdapterBinding -CimSession ($Settings0.cims) -Name "Ethernet" -ComponentID ms_tcpip6 
 Disable-NetAdapterBinding -CimSession ($Settings0.cims) -Name "Wi-Fi" -ComponentID ms_tcpip6
 
 $dnses = (Get-DnsClientServerAddress -InterfaceAlias "Ethernet").ServerAddresses
 
-Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -CimSession ($Settings0.cims) -ServerAddresses $dnses
+$host0 = (Get-CimSession | ? { $_.ComputerName -eq "abdul" })[-1]
+
+$dnses = $null
+Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -CimSession $host0 -ServerAddresses $dnses
+
+$ethernet = Get-WmiObject -Class Win32_NetworkAdapterConfiguration -Filter DHCPEnabled=True -ComputerName $host0.ComputerName -Credential $mycreds | ? { $_.IPAddress }
+$ethernet.RenewDHCPLease()
+
+(Get-DnsClientServerAddress -CimSession $host0 -InterfaceAlias "Ethernet").ServerAddresses
 

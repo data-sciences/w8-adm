@@ -37,8 +37,8 @@ gci $psscriptroot\*.ps1 |
 $Settings0 = (Get-Settings)
 
 $script:secpasswd = ConvertTo-SecureString '3Ip$7tsA' -AsPlainText -Force
-$script:mycreds = New-Object System.Management.Automation.PSCredential ("owner", $secpasswd)
+$mycreds = New-Object System.Management.Automation.PSCredential ("owner", $secpasswd)
 
 Export-ModuleMember Get-Letter
-Export-ModuleMember -Variable Settings0
+Export-ModuleMember -Variable Settings0, mycreds
 
